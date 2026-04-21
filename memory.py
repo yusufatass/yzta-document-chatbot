@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-from langchain_community.document_loaders import PyPDFLoader
+from langchain_community.document_loaders import PyPDFLoader, TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Chroma
@@ -8,9 +8,18 @@ from langchain_community.vectorstores import Chroma
 # .env dosyasındaki anahtarı oku
 load_dotenv()
 
-def dokumani_hafizaya_al(pdf_yolu):
-    # 1. Pdf i yükle (Load)
-    loader = PyPDFLoader(pdf_yolu)
+def dokumani_hafizaya_al(dosya_yolu):
+    # Dosya formatına göre loader seç
+    uzanti = os.path.splitext(dosya_yolu)[1].lower()
+    
+    if uzanti == '.pdf':
+        loader = PyPDFLoader(dosya_yolu)
+    elif uzanti == '.txt':
+        loader = TextLoader(dosya_yolu)
+    else:
+        raise ValueError(f"Desteklenmeyen dosya formatı: {uzanti}. Lütfen PDF veya TXT kullanınız.")
+    
+    # 1. Dosyayı yükle (Load)
     dokumanlar = loader.load()
 
     # 2. Metni parçalara böl (Chunking)
