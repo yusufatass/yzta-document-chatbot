@@ -60,7 +60,3 @@ backend-ai/
 ├── .env.example
 └── .gitignore
 ```
-
-## License
-
-MIT
