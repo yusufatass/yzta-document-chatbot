@@ -8,6 +8,8 @@ from langchain_huggingface import HuggingFaceEmbeddings
 from langchain.callbacks import AsyncIteratorCallbackHandler
 import asyncio
 
+from src.config import DB_DIR
+
 load_dotenv()
 
 def get_llm(provider="groq", streaming=False, callbacks=None):
@@ -31,7 +33,7 @@ async def soru_sor_stream(kullanici_sorusu, provider="groq"):
     # Streaming Logic (Akış Mantığı)
     callback = AsyncIteratorCallbackHandler()
     embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
-    vector_db = Chroma(persist_directory="./db", embedding_function=embeddings)
+    vector_db = Chroma(persist_directory=DB_DIR, embedding_function=embeddings)
     
     llm = get_llm(provider=provider, streaming=True, callbacks=[callback])
     
@@ -52,7 +54,7 @@ async def soru_sor_stream(kullanici_sorusu, provider="groq"):
 def ozetle(provider="groq"):
     # Summarization Logic (Özetleme Mantığı)
     embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
-    vector_db = Chroma(persist_directory="./db", embedding_function=embeddings)
+    vector_db = Chroma(persist_directory=DB_DIR, embedding_function=embeddings)
     docs = vector_db.get()['documents'] # Tüm doküman metinlerini çek
     
     llm = get_llm(provider=provider)
@@ -62,3 +64,20 @@ def ozetle(provider="groq"):
     from langchain_core.documents import Document
     doc_objects = [Document(page_content=t) for t in docs]
     return summarize_chain.run(doc_objects)
+
+def soru_sor_sync(kullanici_sorusu, provider="groq"):
+    """Frontend (Streamlit) için Senkron Soru Sorma Fonksiyonu."""
+    embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+    vector_db = Chroma(persist_directory=DB_DIR, embedding_function=embeddings)
+    
+    llm = get_llm(provider=provider, streaming=False)
+    
+    rag_zinciri = RetrievalQA.from_chain_type(
+        llm=llm,
+        chain_type="stuff",
+        retriever=vector_db.as_retriever(),
+        return_source_documents=True
+    )
+    
+    response = rag_zinciri.invoke({"query": kullanici_sorusu})
+    return response['result'], response.get('source_documents', [])

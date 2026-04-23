@@ -4,6 +4,7 @@ from langchain_community.document_loaders import PyPDFLoader, TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Chroma
+from src.config import DB_DIR
 
 # .env dosyasındaki anahtarı oku
 load_dotenv()
@@ -16,8 +17,11 @@ def dokumani_hafizaya_al(dosya_yolu):
         loader = PyPDFLoader(dosya_yolu)
     elif uzanti == '.txt':
         loader = TextLoader(dosya_yolu)
+    elif uzanti == '.docx':
+        from langchain_community.document_loaders import Docx2txtLoader
+        loader = Docx2txtLoader(dosya_yolu)
     else:
-        raise ValueError(f"Desteklenmeyen dosya formatı: {uzanti}. Lütfen PDF veya TXT kullanınız.")
+        raise ValueError(f"Desteklenmeyen dosya formatı: {uzanti}. Lütfen PDF, DOCX veya TXT kullanınız.")
     
     # 1. Dosyayı yükle (Load)
     dokumanlar = loader.load()
@@ -34,7 +38,7 @@ def dokumani_hafizaya_al(dosya_yolu):
     vector_db = Chroma.from_documents(
         documents=parcalar, 
         embedding=embeddings, 
-        persist_directory="./db"
+        persist_directory=DB_DIR
     )
     
     print(f"Başarılı! {len(parcalar)} adet parça hafızaya alındı.")

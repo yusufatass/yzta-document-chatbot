@@ -2,15 +2,11 @@ import os
 from fastapi import FastAPI, UploadFile, File
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
-from chat import soru_sor_stream, ozetle
-from memory import dokumani_hafizaya_al
+from src.backend.chat import soru_sor_stream, ozetle
+from src.backend.memory import dokumani_hafizaya_al
+from src.config import UPLOAD_DIR
 
 app = FastAPI(title="RAG Backend API")
-
-# Yüklenen dosyalar için geçici klasör oluştur (Ensure upload directory exists)
-UPLOAD_DIR = "uploads"
-if not os.path.exists(UPLOAD_DIR):
-    os.makedirs(UPLOAD_DIR)
 
 class SoruIstegi(BaseModel):
     soru: str
