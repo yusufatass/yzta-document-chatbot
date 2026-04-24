@@ -21,6 +21,13 @@ def process_documents(files):
             dokumani_hafizaya_al(dosya_yolu)
         except Exception as e:
             return False, f"Hata: {str(e)}"
+        finally:
+            # ✅ Dosya her zaman silinecek (başarılı olsun ya da olmasın)
+            if os.path.exists(dosya_yolu):
+                try:
+                    os.remove(dosya_yolu)
+                except:
+                    pass  # Silinemeyen dosya göz ardı et
             
     return True, f"{len(files)} doküman başarıyla işlendi ve vektör veritabanına kaydedildi."
 

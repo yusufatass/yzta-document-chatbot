@@ -9,6 +9,7 @@ from langchain.callbacks import AsyncIteratorCallbackHandler
 import asyncio
 
 from src.config import DB_DIR
+from src.backend.memory import get_embeddings
 
 load_dotenv()
 
@@ -32,7 +33,8 @@ def get_llm(provider="groq", streaming=False, callbacks=None):
 async def soru_sor_stream(kullanici_sorusu, provider="groq"):
     # Streaming Logic (Akış Mantığı)
     callback = AsyncIteratorCallbackHandler()
-    embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+    # ✅ Cache'den embeddings yükle
+    embeddings = get_embeddings()
     vector_db = Chroma(persist_directory=DB_DIR, embedding_function=embeddings)
     
     llm = get_llm(provider=provider, streaming=True, callbacks=[callback])
@@ -53,7 +55,8 @@ async def soru_sor_stream(kullanici_sorusu, provider="groq"):
 
 def ozetle(provider="groq"):
     # Summarization Logic (Özetleme Mantığı)
-    embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+    # ✅ Cache'den embeddings yükle
+    embeddings = get_embeddings()
     vector_db = Chroma(persist_directory=DB_DIR, embedding_function=embeddings)
     docs = vector_db.get()['documents'] # Tüm doküman metinlerini çek
     
@@ -67,7 +70,8 @@ def ozetle(provider="groq"):
 
 def soru_sor_sync(kullanici_sorusu, provider="groq"):
     """Frontend (Streamlit) için Senkron Soru Sorma Fonksiyonu."""
-    embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+    # ✅ Cache'den embeddings yükle
+    embeddings = get_embeddings()
     vector_db = Chroma(persist_directory=DB_DIR, embedding_function=embeddings)
     
     llm = get_llm(provider=provider, streaming=False)

@@ -18,8 +18,18 @@ async def dosya_yukle(dosya: UploadFile = File(...)):
     with open(dosya_yolu, "wb") as f:
         f.write(await dosya.read())
     
-    dokumani_hafizaya_al(dosya_yolu)
-    return {"mesaj": f"{dosya.filename} başarılı yüklendi"}
+    try:
+        dokumani_hafizaya_al(dosya_yolu)
+        return {"mesaj": f"{dosya.filename} başarılı yüklendi"}
+    except Exception as e:
+        return {"hata": str(e)}
+    finally:
+        # ✅ Dosya her zaman silinecek
+        if os.path.exists(dosya_yolu):
+            try:
+                os.remove(dosya_yolu)
+            except:
+                pass
 
 @app.post("/ask/stream")
 async def cevap_ver_stream(istek: SoruIstegi):
