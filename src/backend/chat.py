@@ -52,6 +52,7 @@ def get_llm(provider: str = DEFAULT_PROVIDER, streaming: bool = False, callbacks
             google_api_key=os.getenv("GOOGLE_API_KEY"),
             streaming=streaming,
             callbacks=callbacks,
+            max_retries=1,  # Kota aşıldığında takılı kalmaması için hemen hata döndür
         )
     else:
         return ChatGroq(
@@ -59,6 +60,7 @@ def get_llm(provider: str = DEFAULT_PROVIDER, streaming: bool = False, callbacks
             api_key=os.getenv("GROQ_API_KEY"),
             streaming=streaming,
             callbacks=callbacks,
+            max_retries=1,  # Kota aşıldığında takılı kalmaması için hemen hata döndür
         )
 
 

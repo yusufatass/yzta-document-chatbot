@@ -65,7 +65,18 @@ def generate_response(query, provider, session_id):
                 })
         return cevap, sources_list
     except Exception as e:
+        hata_mesaji = str(e).lower()
         logger.error("Cevap üretme hatası: %s", e)
+        
+        # Kota aşımı veya yetki hatası (429) durumu
+        if "429" in hata_mesaji or "quota" in hata_mesaji or "resourceexhausted" in hata_mesaji:
+            kullanici_mesaji = (
+                "⚠️ **Seçilen yapay zeka modelinin kullanım kotası dolmuştur.**\n\n"
+                "Lütfen model sağlayıcıyı değiştirin (örneğin Groq seçin) "
+                "veya API anahtarınızın faturalandırma limitlerini kontrol edin."
+            )
+            return kullanici_mesaji, []
+            
         return f"Cevap üretilirken bir hata oluştu: {str(e)}", []
 
 
