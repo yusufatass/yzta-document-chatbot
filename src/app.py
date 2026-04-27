@@ -2,6 +2,7 @@ import streamlit as st
 import os
 import sys
 import logging
+import uuid
 
 # Backend modüllerine erişim sağlayabilmek için root'u path'e ekle
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -17,7 +18,7 @@ logger = logging.getLogger(__name__)
 # ──────────────────────────────────────────────
 # 📄 Doküman İşleme
 # ──────────────────────────────────────────────
-def process_documents(files):
+def process_documents(files, session_id):
     """
     Yüklenen dosyaları sırayla işle.
     Bir dosyada hata olsa bile diğerlerine devam eder.
@@ -26,14 +27,16 @@ def process_documents(files):
     hatalar = []        # Hata oluşan dosyalar
 
     for dosya in files:
-        dosya_yolu = os.path.join(UPLOAD_DIR, dosya.name)
+        # Dosya isimlerinin çakışmasını önlemek için session_id prefix'i ekle
+        guvenli_dosya_adi = f"{session_id}_{dosya.name}"
+        dosya_yolu = os.path.join(UPLOAD_DIR, guvenli_dosya_adi)
 
         # Dosyayı diske yaz
         with open(dosya_yolu, "wb") as f:
             f.write(dosya.getbuffer())
 
         try:
-            sonuc = dokumani_hafizaya_al(dosya_yolu)
+            sonuc = dokumani_hafizaya_al(dosya_yolu, session_id=session_id)
             sonuclar.append(sonuc)
         except Exception as e:
             logger.error("Dosya işleme hatası (%s): %s", dosya.name, e)
@@ -49,10 +52,10 @@ def process_documents(files):
     return sonuclar, hatalar
 
 
-def generate_response(query, provider):
+def generate_response(query, provider, session_id):
     """LLM'den cevap al ve kaynakları düzenle."""
     try:
-        cevap, kaynaklar = soru_sor_sync(query, provider=provider)
+        cevap, kaynaklar = soru_sor_sync(query, provider=provider, session_id=session_id)
         sources_list = []
         if kaynaklar:
             for doc in kaynaklar:
@@ -78,6 +81,8 @@ st.set_page_config(
 
 def init_session_state():
     """Mesaj geçmişini ve doküman işleme durumunu st.session_state ile hafızada tutar."""
+    if "session_id" not in st.session_state:
+        st.session_state.session_id = str(uuid.uuid4())
     if "messages" not in st.session_state:
         st.session_state.messages = []
     if "docs_processed" not in st.session_state:
@@ -107,7 +112,7 @@ def main():
         if st.button("🚀 İşle ve Vektörize Et", use_container_width=True):
             if uploaded_files:
                 with st.spinner("Dokümanlar parçalanıyor ve embedding işlemi yapılıyor... ⏳"):
-                    sonuclar, hatalar = process_documents(uploaded_files)
+                    sonuclar, hatalar = process_documents(uploaded_files, st.session_state.session_id)
 
                     # Başarılı dosyaları göster
                     if sonuclar:
@@ -158,7 +163,7 @@ def main():
                 st.rerun()
         with col2:
             if st.button("🔄 DB Sıfırla", use_container_width=True):
-                if veritabanini_sifirla():
+                if veritabanini_sifirla(session_id=st.session_state.session_id):
                     st.session_state.docs_processed = False
                     st.session_state.messages = []
                     st.success("Veritabanı sıfırlandı!")
@@ -200,7 +205,9 @@ def main():
             else:
                 with st.spinner("Cevap oluşturuluyor..."):
                     response, sources = generate_response(
-                        prompt, provider=st.session_state.provider
+                        prompt, 
+                        provider=st.session_state.provider,
+                        session_id=st.session_state.session_id
                     )
                     st.markdown(response)
 

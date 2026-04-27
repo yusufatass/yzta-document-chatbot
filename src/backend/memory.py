@@ -40,16 +40,20 @@ def get_file_hash(dosya_yolu: str) -> str:
         return hashlib.md5(f.read()).hexdigest()
 
 
-def dosya_zaten_var_mi(dosya_hash: str) -> bool:
+def dosya_zaten_var_mi(dosya_hash: str, session_id: str = "default") -> bool:
     """Veritabanında bu hash'e sahip bir doküman var mı kontrol et."""
+    db_path = os.path.join(DB_DIR, session_id)
+    if not os.path.exists(db_path):
+        return False
+        
     try:
-        vector_db = Chroma(persist_directory=DB_DIR, embedding_function=get_embeddings())
+        vector_db = Chroma(persist_directory=db_path, embedding_function=get_embeddings())
         results = vector_db.get(where={"source_hash": dosya_hash})
         return len(results.get('ids', [])) > 0
     except Exception:
         # where filtresi başarısız olursa fallback: tüm dokümanları tara
         try:
-            vector_db = Chroma(persist_directory=DB_DIR, embedding_function=get_embeddings())
+            vector_db = Chroma(persist_directory=db_path, embedding_function=get_embeddings())
             all_docs = vector_db.get()
             for metadata in all_docs.get('metadatas', []):
                 if metadata.get('source_hash') == dosya_hash:
@@ -58,11 +62,10 @@ def dosya_zaten_var_mi(dosya_hash: str) -> bool:
             pass  # Veritabanı henüz yoksa — yeni başlıyor demektir
         return False
 
-
 # ──────────────────────────────────────────────
 # 📄 Doküman Yükleme & Embedding (Ana İş Mantığı)
 # ──────────────────────────────────────────────
-def dokumani_hafizaya_al(dosya_yolu: str) -> dict:
+def dokumani_hafizaya_al(dosya_yolu: str, session_id: str = "default") -> dict:
     """
     Bir dokümanı yükle, parçala, embedding yap ve vektör veritabanına kaydet.
 
@@ -74,12 +77,19 @@ def dokumani_hafizaya_al(dosya_yolu: str) -> dict:
         raise FileNotFoundError(f"Dosya bulunamadı: {dosya_yolu}")
 
     dosya_adi = os.path.basename(dosya_yolu)
+    
+    # Prefix varsa (session_id_) dosya adını temizleyelim ki kullanıcı orijinal adını görsün
+    # Eğer '_' varsa ve ön taraf UUID gibi bir şeyse, suffix'i alır.
+    if '_' in dosya_adi and len(dosya_adi.split('_', 1)[0]) > 20:
+        orijinal_dosya_adi = dosya_adi.split('_', 1)[1]
+    else:
+        orijinal_dosya_adi = dosya_adi
 
     # 2. Duplikasyon kontrolü
     dosya_hash = get_file_hash(dosya_yolu)
-    if dosya_zaten_var_mi(dosya_hash):
-        logger.info("Dosya zaten mevcut, atlanıyor: %s", dosya_adi)
-        return {"dosya": dosya_adi, "parca_sayisi": 0, "zaten_vardi": True}
+    if dosya_zaten_var_mi(dosya_hash, session_id=session_id):
+        logger.info("Dosya zaten mevcut, atlanıyor: %s", orijinal_dosya_adi)
+        return {"dosya": orijinal_dosya_adi, "parca_sayisi": 0, "zaten_vardi": True}
 
     # 3. Dosya formatına göre loader seç
     uzanti = os.path.splitext(dosya_yolu)[1].lower()
@@ -101,14 +111,17 @@ def dokumani_hafizaya_al(dosya_yolu: str) -> dict:
 
     # 6. Vektör veritabanına kaydet
     embeddings = get_embeddings()
+    db_path = os.path.join(DB_DIR, session_id)
+    os.makedirs(db_path, exist_ok=True)
+    
     Chroma.from_documents(
         documents=parcalar,
         embedding=embeddings,
-        persist_directory=DB_DIR
+        persist_directory=db_path
     )
 
-    logger.info("✅ %s → %d parça hafızaya alındı.", dosya_adi, len(parcalar))
-    return {"dosya": dosya_adi, "parca_sayisi": len(parcalar), "zaten_vardi": False}
+    logger.info("✅ %s → %d parça hafızaya alındı.", orijinal_dosya_adi, len(parcalar))
+    return {"dosya": orijinal_dosya_adi, "parca_sayisi": len(parcalar), "zaten_vardi": False}
 
 
 def _dosyayi_yukle(dosya_yolu: str, uzanti: str):
@@ -154,14 +167,19 @@ def _txt_yukle(dosya_yolu: str):
 # ──────────────────────────────────────────────
 # 🗑️ Veritabanı Yönetimi
 # ──────────────────────────────────────────────
-def veritabanini_sifirla() -> bool:
+def veritabanini_sifirla(session_id: str = "default") -> bool:
     """
-    Vektör veritabanındaki TÜM verileri sil.
+    Vektör veritabanındaki oturuma ait verileri sil.
     ChromaDB'nin kendi API'sini kullanır — dosya kilidi sorunu olmaz.
     """
     try:
         import chromadb
-        client = chromadb.PersistentClient(path=DB_DIR)
+        db_path = os.path.join(DB_DIR, session_id)
+        if not os.path.exists(db_path):
+            logger.info("Silinecek veritabanı bulunamadı: %s", db_path)
+            return True
+            
+        client = chromadb.PersistentClient(path=db_path)
 
         # Tüm koleksiyonları sil
         koleksiyonlar = client.list_collections()

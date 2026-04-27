@@ -62,17 +62,18 @@ def get_llm(provider: str = DEFAULT_PROVIDER, streaming: bool = False, callbacks
         )
 
 
-def _get_retriever():
+def _get_retriever(session_id: str = "default"):
     """Vektör veritabanından retriever oluştur."""
     embeddings = get_embeddings()
-    vector_db = Chroma(persist_directory=DB_DIR, embedding_function=embeddings)
+    db_path = os.path.join(DB_DIR, session_id)
+    vector_db = Chroma(persist_directory=db_path, embedding_function=embeddings)
     return vector_db.as_retriever(search_kwargs={"k": RETRIEVER_K})
 
 
-def _build_rag_chain(provider: str, streaming: bool = False, callbacks=None):
+def _build_rag_chain(provider: str, session_id: str = "default", streaming: bool = False, callbacks=None):
     """RAG zincirini oluştur — retriever + LLM + prompt."""
     llm = get_llm(provider=provider, streaming=streaming, callbacks=callbacks)
-    retriever = _get_retriever()
+    retriever = _get_retriever(session_id=session_id)
 
     return RetrievalQA.from_chain_type(
         llm=llm,
@@ -86,7 +87,7 @@ def _build_rag_chain(provider: str, streaming: bool = False, callbacks=None):
 # ──────────────────────────────────────────────
 # 💬 Senkron Soru-Cevap (Streamlit için)
 # ──────────────────────────────────────────────
-def soru_sor_sync(kullanici_sorusu: str, provider: str = DEFAULT_PROVIDER):
+def soru_sor_sync(kullanici_sorusu: str, provider: str = DEFAULT_PROVIDER, session_id: str = "default"):
     """
     Kullanıcının sorusuna senkron olarak cevap ver.
 
@@ -102,7 +103,7 @@ def soru_sor_sync(kullanici_sorusu: str, provider: str = DEFAULT_PROVIDER):
     except RuntimeError:
         asyncio.set_event_loop(asyncio.new_event_loop())
 
-    rag_zinciri = _build_rag_chain(provider=provider, streaming=False)
+    rag_zinciri = _build_rag_chain(provider=provider, session_id=session_id, streaming=False)
     response = rag_zinciri.invoke({"query": kullanici_sorusu})
 
     cevap = response['result']
@@ -115,11 +116,11 @@ def soru_sor_sync(kullanici_sorusu: str, provider: str = DEFAULT_PROVIDER):
 # ──────────────────────────────────────────────
 # 🌊 Streaming Soru-Cevap (API için)
 # ──────────────────────────────────────────────
-async def soru_sor_stream(kullanici_sorusu: str, provider: str = DEFAULT_PROVIDER):
+async def soru_sor_stream(kullanici_sorusu: str, provider: str = DEFAULT_PROVIDER, session_id: str = "default"):
     """Kullanıcının sorusuna streaming (akışlı) olarak cevap ver."""
     callback = AsyncIteratorCallbackHandler()
     rag_zinciri = _build_rag_chain(
-        provider=provider, streaming=True, callbacks=[callback]
+        provider=provider, session_id=session_id, streaming=True, callbacks=[callback]
     )
 
     task = asyncio.create_task(rag_zinciri.ainvoke({"query": kullanici_sorusu}))
@@ -133,10 +134,11 @@ async def soru_sor_stream(kullanici_sorusu: str, provider: str = DEFAULT_PROVIDE
 # ──────────────────────────────────────────────
 # 📋 Doküman Özetleme
 # ──────────────────────────────────────────────
-def ozetle(provider: str = DEFAULT_PROVIDER):
+def ozetle(provider: str = DEFAULT_PROVIDER, session_id: str = "default"):
     """Veritabanındaki tüm dokümanları özetle."""
     embeddings = get_embeddings()
-    vector_db = Chroma(persist_directory=DB_DIR, embedding_function=embeddings)
+    db_path = os.path.join(DB_DIR, session_id)
+    vector_db = Chroma(persist_directory=db_path, embedding_function=embeddings)
     docs = vector_db.get()['documents']
 
     llm = get_llm(provider=provider)
