@@ -1,16 +1,31 @@
-langchain==0.1.20
-langchain-community==0.0.38
-langchain-groq==0.1.0
-langchain-huggingface==0.0.1
+# ─── LangChain Ekosistemi ───
+langchain>=0.1.20
+langchain-community>=0.0.38
+langchain-groq>=0.1.0
+langchain-huggingface>=0.0.1
+langchain-google-genai>=1.0.0
+langchain-text-splitters>=0.0.1
+
+# ─── Vektör Veritabanı & Embedding ───
 chromadb>=0.5.0
-pypdf==4.0.1
-python-dotenv==1.0.0
+sentence-transformers>=2.2.0
+onnxruntime>=1.17.0
+
+# ─── Doküman İşleme ───
+pypdf>=4.0.0
+docx2txt>=0.8
+python-dotenv>=1.0.0
+
+# ─── Hugging Face ───
 huggingface-hub>=0.23.0
-fastapi==0.104.1
-uvicorn==0.24.0
-python-multipart==0.0.6
+
+# ─── API (FastAPI) ───
+fastapi>=0.104.0
+uvicorn>=0.24.0
+python-multipart>=0.0.6
+
+# ─── LLM Providers ───
 google-generativeai>=0.3.0
 
+# ─── Frontend ───
 streamlit>=1.31.0
-docx2txt>=0.8
-langchain-google-genai>=1.0.0
