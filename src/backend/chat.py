@@ -21,6 +21,20 @@ load_dotenv()
 logger = logging.getLogger(__name__)
 
 # ──────────────────────────────────────────────
+# 🛠️ Langchain Google GenAI Monkey Patch
+# Langchain, Kota (429) hatalarında varsayılan olarak 10 kez (yaklaşık 2-3 dakika) 
+# tekrar deneme (retry) yapar. Bu da uygulamanın donmuş gibi görünmesine sebep olur.
+# Aşağıdaki kod bu otomatik denemeyi iptal ederek hatanın anında ekrana düşmesini sağlar.
+# ──────────────────────────────────────────────
+import langchain_google_genai.chat_models as genai_chat_models
+from tenacity import retry, stop_after_attempt
+
+def custom_retry_decorator():
+    return retry(reraise=True, stop=stop_after_attempt(1))
+
+genai_chat_models._create_retry_decorator = custom_retry_decorator
+
+# ──────────────────────────────────────────────
 # 📝 Türkçe RAG Prompt Şablonu
 # ──────────────────────────────────────────────
 _RAG_PROMPT = PromptTemplate(
