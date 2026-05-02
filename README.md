@@ -11,8 +11,8 @@
 
 ## 🔗 Bağlantılar ve Görseller
 
-| 🚀 [Canlı Demo (Streamlit)](https://yzta-document-chatbot.streamlit.app/) | 🛠️ [API Dokümantasyonu (Swagger)](http://localhost:8000/docs) |
-| :--- | :--- |
+| 🚀 [Canlı Demo (Streamlit)](https://yzta-document-chatbot.streamlit.app/) |
+| :--- |
 
 ### 📸 Ekran Görüntüsü
 
