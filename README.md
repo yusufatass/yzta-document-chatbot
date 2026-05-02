@@ -11,13 +11,16 @@
 
 ## 🔗 Bağlantılar ve Görseller
 
-| 🚀 [Canlı Demo (Streamlit)](https://yzta-document-chatbot.streamlit.app/) 
+| 🚀 [Canlı Demo (Streamlit)](https://yzta-document-chatbot.streamlit.app/) | 🛠️ [API Dokümantasyonu (Swagger)](http://localhost:8000/docs) |
 | :--- | :--- |
 
 ### 📸 Ekran Görüntüsü
-![Uygulama Arayüzü](<img width="1896" height="904" alt="image" src="https://github.com/user-attachments/assets/40637309-5ddf-4145-8d77-aa0924a9501a" />)
-*Uygulamanın ana arayüzü, doküman yükleme ve sohbet paneli.*
 
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/40637309-5ddf-4145-8d77-aa0924a9501a" alt="YZTA Chatbot Arayüzü" width="100%">
+  <br>
+  <em>Uygulamanın ana arayüzü, doküman yükleme ve sohbet paneli.</em>
+</p>
 ---
 
 ## ✨ Özellikler
