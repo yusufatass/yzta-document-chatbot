@@ -1,27 +1,60 @@
 # 📚 YZTA Document Chatbot
+> **Verilerinizle Konuşun:** Doküman analizi için optimize edilmiş, yüksek performanslı ve modern bir RAG (Retrieval-Augmented Generation) sistemi.
 
-AI-powered document analysis system using **Retrieval-Augmented Generation (RAG)**. Upload your PDF, DOCX, or TXT documents and chat with them using powerful LLMs.
+[![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)](https://www.python.org/)
+[![Streamlit](https://img.shields.io/badge/Frontend-Streamlit-red.svg)](https://streamlit.io/)
+[![FastAPI](https://img.shields.io/badge/API-FastAPI-green.svg)](https://fastapi.tiangolo.com/)
+[![LangChain](https://img.shields.io/badge/Framework-LangChain-white.svg)](https://www.langchain.com/)
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-## ✨ Features
+---
 
-- 📄 **Multi-format document upload** — PDF, DOCX, TXT
-- 🤖 **Dual LLM support** — Groq (Llama 3.3) & Google Gemini
-- 💬 **Interactive chat interface** — Streamlit-based conversational UI
-- 🔍 **Semantic search** — Vector-based retrieval with ChromaDB
-- 📎 **Source tracking** — See which document & page the answer came from
-- 🔄 **Duplicate detection** — Same document won't be processed twice
-- 🌊 **Streaming API** — FastAPI endpoint with real-time token streaming
+## 🔗 Bağlantılar ve Görseller
+
+| 🚀 [Canlı Demo (Streamlit)](https://yzta-document-chatbot.streamlit.app/) 
+| :--- | :--- |
+
+### 📸 Ekran Görüntüsü
+![Uygulama Arayüzü](<img width="1896" height="904" alt="image" src="https://github.com/user-attachments/assets/40637309-5ddf-4145-8d77-aa0924a9501a" />)
+*Uygulamanın ana arayüzü, doküman yükleme ve sohbet paneli.*
+
+---
+
+## ✨ Özellikler
+
+- 📄 **Geniş Format Desteği:** PDF, DOCX ve TXT dosyalarını akıllı parçalama (chunking) algoritmasıyla işler.
+- 🤖 **Dual LLM Entegrasyonu:** Hız için **Groq (Llama 3.3)**, karmaşık analizler için **Google Gemini** desteği.
+- 🔍 **Semantik Arama:** ChromaDB ve HuggingFace embeddings (`all-MiniLM-L6-v2`) kullanarak bağlamsal erişim sağlar.
+- 📍 **Kaynak Gösterimi:** Yapay zeka, cevabı hangi belgenin hangi sayfasından aldığını şeffafça belirtir.
+- 🛡️ **Veri Bütünlüğü:** Mükerrer doküman kontrolü sayesinde aynı dosya sistemde iki kez işlenmez.
+- 🌊 **Gerçek Zamanlı Yanıt:** FastAPI tabanlı streaming API ile kelime kelime (token-by-token) yanıt akışı.
+
+---
+
+## ⚙️ Teknik Mimari (RAG Pipeline)
+
+YZTA Chatbot, veriyi sadece saklamaz; onu anlamlandırır. Süreç şu şekilde işler:
+
+1.  **Ingestion:** Dokümanlar yüklenir ve `RecursiveCharacterTextSplitter` ile anlamlı parçalara ayrılır.
+2.  **Embedding:** Metin parçaları, HuggingFace modelleri ile 384 boyutlu vektörlere dönüştürülür.
+3.  **Indexing:** Vektörler, hızlı benzerlik araması için **ChromaDB** üzerinde indekslenir.
+4.  **Retrieval:** Kullanıcı sorusu geldiğinde, vektör uzayında en yakın (benzer) metin parçaları getirilir.
+5.  **Generation:** Getirilen bağlam (context) ve soru, LLM'e iletilerek kesin, tutarlı ve kaynaklı bir cevap üretilir.
+
+---
 
 ## 🛠️ Tech Stack
 
-| Component | Technology |
-|-----------|-----------|
-| Frontend | Streamlit |
-| API | FastAPI |
-| LLM | Groq (Llama 3.3), Google Gemini |
-| Vector DB | ChromaDB |
-| Embeddings | HuggingFace (all-MiniLM-L6-v2) |
-| Orchestration | LangChain |
+| Stack | Teknoloji | Açıklama |
+| :--- | :--- | :--- |
+| **Frontend** | `Streamlit` | Kullanıcı dostu, interaktif web arayüzü. |
+| **Backend API** | `FastAPI` | Asenkron, yüksek performanslı REST servisleri. |
+| **Vektör Veritabanı**| `ChromaDB` | Yerel ve hızlı vektör depolama çözümü. |
+| **Orchestration** | `LangChain` | RAG zincirleri ve LLM yönetimi. |
+| **Embeddings** | `HuggingFace` | Cihaz üzerinde çalışan açık kaynak vektör modelleri. |
+| **Modeller** | `Groq / Gemini` | SOTA (State-of-the-art) büyük dil modelleri. |
+
+---
 
 ## 🚀 Setup
 
@@ -81,4 +114,4 @@ yzta-chatbot/
 
 ## 📝 License
 
-This project is for educational purposes.
+Bu proje MIT Lisansı altında lisanslanmıştır. Eğitim amaçlı kullanıma uygundur.
